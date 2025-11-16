@@ -1,4 +1,5 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const { createServer } = require('node:http');
 const { join } = require('node:path');
 const { Server } = require("socket.io")
@@ -82,20 +83,32 @@ async function main() {
 
      // Get the currently logged-in user from the session/token
         // Since you have JWT auth, we need to get the user from the token
-        const token = socket.handshake.auth?.token || 
-                     socket.handshake.headers?.authorization?.replace('Bearer ', '');
+        // const token = socket.handshake.auth?.token || 
+        //              socket.handshake.headers?.authorization?.replace('Bearer ', '');
         
-        let username = 'anonymous';
+        // let username = 'anonymous';
+        
+        // if (token) {
+        //     try {
+        //         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        //         const currentUser = await User.findById(decoded.id);
+        //         if (currentUser) {
+        //             username = currentUser.username;
+        //         }
+        //     } catch (error) {
+        //         console.log("Invalid token, using anonymous");
+        //     }
+        // }
+
+        const token = socket.handshake.auth?.token;
+        
+        let username = 'Anonymous';
         
         if (token) {
-            try {
-                const decoded = jwt.verify(token, process.env.JWT_SECRET);
-                const currentUser = await User.findById(decoded.id);
-                if (currentUser) {
-                    username = currentUser.username;
-                }
-            } catch (error) {
-                console.log("Invalid token, using anonymous");
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const currentUser = await User.findById(decoded.id);
+            if (currentUser) {
+                username = currentUser.username;
             }
         }
 
@@ -120,9 +133,13 @@ async function main() {
                 const serverOffset = socket.handshake.auth.serverOffset || '000000000000000000000000';
                 const chats = await Chat.getMessagesAfterOffset(serverOffset);
 
-                // Send each missed message to the reconnected client
+                // // Send each missed message to the reconnected client
+                // chats.forEach((chat) => {
+                //     socket.emit('chat message', chat.content, chat._id.toString());
+                // });
+
                 chats.forEach((chat) => {
-                    socket.emit('chat message', chat.content, chat._id.toString());
+                    socket.emit('chat message', chat.content, chat.user, chat._id.toString()); // Add chat.user
                 });
 
                 console.log(`Sent ${chats.length} missed messages to ${socket.id}`);

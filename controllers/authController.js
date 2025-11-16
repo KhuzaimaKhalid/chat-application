@@ -19,7 +19,8 @@ const register = async (req, res) => {
         await newUser.save()
       //  console.log('before login route')
         res.redirect('/api/auth/login')
-       // res.status(201).json({ message: `User registered with username ${username}` })
+        res.status(201).json({ message: `User registered with username ${username}` })
+     //  res.status(201).send('<script>alert("Registration successful! Please login."); window.location.href="/api/auth/login";</script>');
     } catch (error) {
         res.status(500).json({ message: 'Something went wrong' })
     }
@@ -40,9 +41,18 @@ const login = async (req, res) => {
             {id: user._id, role: user.role},
             process.env.JWT_SECRET,
             {expiresIn : "1h"}
-        )
+        );
+        
+        // Set token as HTTP-only cookie
+        res.cookie('token', token, { 
+            httpOnly: false, 
+            maxAge: 3600000 // 1 hour
+        });
+        
+      
        // res.status(200).json({ token })
-        res.redirect('/')
+        //res.redirect('/')
+        res.send('<script>window.location.href="/";</script>');
     } catch (error) {
         res.status(500).json({ message: 'Something went wrong' })
     }

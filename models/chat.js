@@ -4,7 +4,7 @@ const chatSchema = new mongoose.Schema({
     content: {
         type: String,
         trim: true,
-        maxlength: 500
+        maxlength: 7000000
     },
     client_offset:{
         type: String,
